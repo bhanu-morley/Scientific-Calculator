@@ -1,193 +1,107 @@
-const buttons = document.querySelectorAll('button');
-const display = document.getElementById('display');
-const exprText = document.getElementById('expressionText');
-const sciToggle = document.getElementById('sciToggle');
+const buttons     = document.querySelectorAll('button');
+const display     = document.getElementById('display');
+const exprText    = document.getElementById('expressionText');
+const sciToggle   = document.getElementById('sciToggle');
 const themeSwitch = document.getElementById('themeSwitch');
-const calculator = document.getElementById('calculatorContainer');
-
+const calculator  = document.getElementById('calculatorContainer');
 
 let expression = '';
-let evaluated = false;
-let isFocused = false;
+let evaluated  = false;
+let isFocused  = false;
 
 
-const round10 = (num, places = 12) => {
-  Math.round(num * 10 ** places) / 10 ** places;
-}
+const round10  = (n, p = 12) => Math.round(n * 10 ** p) / 10 ** p;
+const nearZero = n => Math.abs(n) < 1e-12 ? 0 : n;
+
+const dsin   = x => Math.sin(x * Math.PI / 180);
+const dcos   = x => Math.cos(x * Math.PI / 180);
+const dtan   = x => Math.tan(x * Math.PI / 180);
+const dcot   = x => 1 / Math.tan(x * Math.PI / 180);
+const dsec   = x => { const c = nearZero(dcos(x));  if (c === 0) throw '÷0'; return 1 / c; };
+const dcosec = x => { const s = nearZero(dsin(x));  if (s === 0) throw '÷0'; return 1 / s; };
 
 
-const dsin = x => Math.sin(x * Math.PI / 180);
-const dcos = x => Math.cos(x * Math.PI / 180);
-const dtan = x => Math.tan(x * Math.PI / 180);
-const dcot = x => 1 / Math.tan(x * Math.PI / 180);
-
-const dsec = x => {
-  const c = nearZero(Math.cos(x * Math.PI / 180));
-  if (c === 0) throw new Error('Divide by zero');
-  return 1 / c;
+themeSwitch.onchange = () => {
+  const t = themeSwitch.checked ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t;
+  localStorage.theme = t;
 };
-
-const dcosec = x => {
-  const s = nearZero(Math.sin(x * Math.PI / 180));
-  if (s === 0) throw new Error('Divide by zero');
-  return 1 / s;
-};
-
-
-themeSwitch.addEventListener('change', () => {
-  const theme = themeSwitch.checked ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('theme', theme);
-});
-
 
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('theme');
-  const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  const active = saved || system;
-  themeSwitch.checked = active === 'dark';
-  document.documentElement.setAttribute('data-theme', active);
+  const t = localStorage.theme ??
+            (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+  themeSwitch.checked = t === 'dark';
+  document.documentElement.dataset.theme = t;
 });
 
+sciToggle.onclick = () => calculator.classList.toggle('scientific-mode');
 
-sciToggle.addEventListener('click', () => {
-  calculator.classList.toggle('scientific-mode');
-});
+const update   = () => { exprText.textContent = expression; display.scrollLeft = display.scrollWidth; };
+const clearErr = () => { if (expression === 'Error!') expression = ''; };
 
-
-function updateDisplay() {
-  exprText.textContent = expression;
-  display.scrollLeft = display.scrollWidth;
-}
-
-function resetIfError() {
-  if (expression === 'Error!') expression = '';
-}
-
-
-const safeEval = expr => Function(`'use strict';return (${expr})`)();
-
+const safeEval = expr => Function(`'use strict'; return (${expr})`)();
 
 function evaluate() {
   try {
-    const balanced = expression + ')'.repeat(
-      (expression.match(/\(/g) || []).length -
-      (expression.match(/\)/g) || []).length
-    );
+    const diff     = (expression.match(/\(/g) || []).length -
+                     (expression.match(/\)/g) || []).length;
+    const balanced = expression + ')'.repeat(Math.max(0, diff));
 
-    const safeExpr = balanced
-      .replace(/\b0+(?=\d+(\b|[^\d.]))/g, '')
-      .replace(/sin\(/g, 'dsin(')
-      .replace(/cos\(/g, 'dcos(')
-      .replace(/tan\(/g, 'dtan(')
-      .replace(/cot\(/g, 'dcot(')
-      .replace(/sec\(/g, 'dsec(')
-      .replace(/cosec\(/g, 'dcosec(')
-      .replace(/log\(/g, 'Math.log10(')
-      .replace(/ln\(/g, 'Math.log(')
-      .replace(/sqrt\(/g, 'Math.sqrt(')
-      .replace(/π/g, 'Math.PI');
+    const safe = balanced
+      .replace(/\b0+(?=\d+(\b|[^\d.]))/g,'')
+      .replace(/sin\(/g,'dsin(').replace(/cos\(/g,'dcos(').replace(/tan\(/g,'dtan(')
+      .replace(/cot\(/g,'dcot(').replace(/sec\(/g,'dsec(').replace(/cosec\(/g,'dcosec(')
+      .replace(/log\(/g,'Math.log10(').replace(/ln\(/g,'Math.log(')
+      .replace(/sqrt\(/g,'Math.sqrt(').replace(/π/g,'Math.PI');
 
-    let result = safeEval(safeExpr);
-    result = round10(result, 12);
+    let res = safeEval(safe);
+    res     = round10(res);
+    if (!isFinite(res)) throw '÷0';
 
-    if (!isFinite(result)) throw new Error('Divide by zero');
+    if (res === 0) {
+      expression = '0';
+    } else {
+      expression =
+        Math.abs(res) < 1e-6 || Math.abs(res) >= 1e6
+          ? res.toExponential(6)
+          : String(res);
+    }
+  } catch { expression = 'Error'; }
 
-    expression =
-      Math.abs(result) >= 1e6 || Math.abs(result) < 1e-6
-        ? result.toExponential(6)
-        : result.toString();
-  } catch {
-    expression = 'Error!';
-  }
   evaluated = true;
-  updateDisplay();
+  update();
 }
 
-
-buttons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const val = btn.value;
-    switch (val) {
-      case 'AC':
-        expression = '';
-        break;
-
-      case 'DEL':
-        resetIfError();
-        expression = expression.slice(0, -1);
-        break;
-
-      case '=':
-        evaluate();
-        return;
-
-      default:
-        resetIfError();
-        if (evaluated) {
-          if (/^[0-9.]$/.test(val)) {
-            expression = val;
-          } else {
-            expression += val;
-          }
-        } else {
-          expression += val;
-        }
-        evaluated = false;
-    }
-    updateDisplay();
-  });
+buttons.forEach(btn => btn.onclick = () => {
+  const v = btn.value;
+  switch (v) {
+    case 'AC':  expression = ''; break;
+    case 'DEL': clearErr(); expression = expression.slice(0,-1); break;
+    case '=':   evaluate(); return;
+    default:
+      clearErr();
+      expression = evaluated && /^[0-9.]$/.test(v) ? v : expression + v;
+      evaluated  = false;
+  }
+  update();
 });
-
 
 document.addEventListener('keydown', e => {
   if (!isFocused) return;
 
-  if (e.ctrlKey && e.key === 'Backspace') {
-    e.preventDefault();
-    expression = '';
-    evaluated = false;
-    updateDisplay();
-    return;
-  }
+  if (e.ctrlKey && e.key === 'Backspace') { e.preventDefault(); expression=''; update(); evaluated=false; return; }
+  if (e.key === 'Enter')      { e.preventDefault(); evaluate(); return; }
+  if (e.key === 'Backspace')  { clearErr(); expression = expression.slice(0,-1); update(); evaluated=false; return; }
 
-  const keys = '0123456789+-*/%.()'.split('');
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    evaluate();
-    return;
-  }
-
-  if (e.key === 'Backspace') {
-    resetIfError();
-    expression = expression.slice(0, -1);
-    evaluated = false;
-    updateDisplay();
-    return;
-  }
-
-  if (keys.includes(e.key)) {
-    resetIfError();
-    if (evaluated) {
-      if (/^[0-9.]$/.test(e.key)) {
-        expression = e.key;
-      } else {
-        expression += e.key;
-      }
-    } else {
-      expression += e.key;
-    }
-    evaluated = false;
-    updateDisplay();
+  const ok = '0123456789+-*/%.()';
+  if (ok.includes(e.key)) {
+    clearErr();
+    expression = evaluated && /^[0-9.]$/.test(e.key) ? e.key : expression + e.key;
+    evaluated  = false;
+    update();
   }
 });
 
-document.querySelector('.calculator').addEventListener('click', () => display.focus());
-display.addEventListener('focus', () => {
-  isFocused = true;
-  display.classList.add('focused');
-});
-display.addEventListener('blur', () => {
-  isFocused = false;
-  display.classList.remove('focused');
-});
+document.querySelector('.calculator').onclick = () => display.focus();
+display.onfocus = () => { isFocused = true;  display.classList.add('focused'); };
+display.onblur  = () => { isFocused = false; display.classList.remove('focused'); };
