@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scientific Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <h1>Scientific Calculator</h1>
+    <hr />
+    <div class="calculator normal-mode" id="calculatorContainer">
+        <div class="calculator-header">
+            <div class="header-controls">
+                <div class="theme-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="themeSwitch">
+                        <span class="slider round" id="themeSlider"></span>
+                    </label>
+                    <label class="toggle-label">Switch Theme</label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container">
+            <div class="result" id="display" tabindex="0">
+                <img src="/Images/scientific.png" alt="scientific toggle" id="sciToggle" class="sci-icon">
+                <div class="expression-text" id="expressionText"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="scientific-buttons" id="scientificButtons">
+                <button class="sci" value="sin(">sin</button>
+                <button class="sci" value="cos(">cos</button>
+                <button class="sci" value="tan(">tan</button>
+                <button class="sci" value="cot(">cot</button>
+                <button class="sci" value="π">π</button>
+                <button class="sci" value="sec(">sec</button>
+                <button class="sci" value="cosec(">cosec</button>
+                <button class="sci" value="log(">log</button>
+                <button class="sci" value="ln(">ln</button>
+                <button class="sci" value="sqrt(">√</button>
+            </div>
+            <div class="button-divider"></div>
+
+            <div class="basic-buttons" id="basicButtons">
+                <button class="sci" value="AC">AC</button>
+                <button class="sci" value="DEL"><img src="/Images/backspace.png" alt="DEL"></button>
+                <button class="sci" value="%">%</button>
+                <button class="sci" value="/"><img src="/Images/divide.png" alt=""></button>
+                <button class="sci" value="7">7</button>
+                <button class="sci" value="8">8</button>
+                <button class="sci" value="9">9</button>
+                <button class="sci" value="*"><img src="/Images/multiply.png" alt=""></button>
+                <button class="sci" value="4">4</button>
+                <button class="sci" value="5">5</button>
+                <button class="sci" value="6">6</button>
+                <button class="sci" value="-"><img src="/Images/subtract.png" alt=""></button>
+                <button class="sci" value="1">1</button>
+                <button class="sci" value="2">2</button>
+                <button class="sci" value="3">3</button>
+                <button class="sci" value="+"><img src="/Images/add.png" alt=""></button>
+                <button class="sci" value="00">00</button>
+                <button class="sci" value="0">0</button>
+                <button class="sci" value=".">.</button>
+                <button class="sci" value="="><img src="/Images/equal.png" alt=""></button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
