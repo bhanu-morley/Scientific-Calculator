@@ -1,23 +1,23 @@
-const buttons     = document.querySelectorAll('button');
-const display     = document.getElementById('display');
-const exprText    = document.getElementById('expressionText');
-const sciToggle   = document.getElementById('sciToggle');
+const buttons = document.querySelectorAll('button');
+const display = document.getElementById('display');
+const exprText = document.getElementById('expressionText');
+const sciToggle = document.getElementById('sciToggle');
 const themeSwitch = document.getElementById('themeSwitch');
-const calculator  = document.getElementById('calculatorContainer');
+const calculator = document.getElementById('calculatorContainer');
 
 let expression = '';
-let evaluated  = false;
-let isFocused  = false;
+let evaluated = false;
+let isFocused = false;
 
 
-const round10  = (n, p = 12) => Math.round(n * 10 ** p) / 10 ** p;
+const round10 = (n, p = 12) => Math.round(n * 10 ** p) / 10 ** p;
 const nearZero = n => Math.abs(n) < 1e-12 ? 0 : n;
 
-const dsin   = x => Math.sin(x * Math.PI / 180);
-const dcos   = x => Math.cos(x * Math.PI / 180);
-const dtan   = x => Math.tan(x * Math.PI / 180);
-const dcot   = x => 1 / Math.tan(x * Math.PI / 180);
-const dsec   = x => { const c = nearZero(dcos(x));  if (c === 0) throw '÷0'; return 1 / c; };
+const dsin = x => Math.sin(x * Math.PI / 180);
+const dcos = x => Math.cos(x * Math.PI / 180);
+const dtan = x => Math.tan(x * Math.PI / 180);
+const dcot = x => 1 / Math.tan(x * Math.PI / 180);
+const dsec = x => { const c = nearZero(dcos(x));  if (c === 0) throw '÷0'; return 1 / c; };
 const dcosec = x => { const s = nearZero(dsin(x));  if (s === 0) throw '÷0'; return 1 / s; };
 
 
@@ -36,14 +36,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 sciToggle.onclick = () => calculator.classList.toggle('scientific-mode');
 
-const update   = () => { exprText.textContent = expression; display.scrollLeft = display.scrollWidth; };
+const update = () => { exprText.textContent = expression; display.scrollLeft = display.scrollWidth; };
 const clearErr = () => { if (expression === 'Error!') expression = ''; };
 
 const safeEval = expr => Function(`'use strict'; return (${expr})`)();
 
 function evaluate() {
   try {
-    const diff     = (expression.match(/\(/g) || []).length -
+    const diff = (expression.match(/\(/g) || []).length -
                      (expression.match(/\)/g) || []).length;
     const balanced = expression + ')'.repeat(Math.max(0, diff));
 
